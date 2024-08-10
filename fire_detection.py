@@ -9,23 +9,26 @@ cap = cv2.VideoCapture(0)
 # Track the time of the last beep to prevent frequent beeping
 last_beep_time = time.time()
 
+# Define HSV color range for detecting fire
+lower_fire = np.array([0, 100, 100])
+upper_fire = np.array([20, 255, 255])  # Adjusted for broader color range
+
+# Kernel for morphological operations
+kernel = np.ones((5, 5), np.uint8)
+
 while True:
     ret, frame = cap.read()
     if not ret:
+        print("Failed to grab frame")
         break
 
     # Convert the current frame from BGR to HSV color space
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-    # Define HSV color range for detecting fire
-    lower_fire = np.array([0, 100, 100])
-    upper_fire = np.array([20, 255, 255])  # Adjusted for broader color range
-
     # Create a binary mask where fire colors are within the defined range
     mask = cv2.inRange(hsv, lower_fire, upper_fire)
 
     # Apply erosion and dilation to remove small noise
-    kernel = np.ones((5, 5), np.uint8)
     mask = cv2.erode(mask, kernel, iterations=1)
     mask = cv2.dilate(mask, kernel, iterations=1)
 

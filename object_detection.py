@@ -35,7 +35,7 @@ while True:
         detected_objects.add(obj)
 
     # Exit the loop when the spacebar is pressed
-    if cv2.waitKey(1) == ord(" "):
+    if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 
 # Release the video capture and close all OpenCV windows

@@ -8,8 +8,8 @@ import os
 # Initialize video capture from the default camera
 video = cv2.VideoCapture(0)
 
-# Initialize a set to store detected objects (avoids duplicates)
-detected_objects = set()
+# Initialize a set to store the current frame's detected objects
+current_objects = set()
 
 while True:
     # Capture a frame from the video feed
@@ -30,9 +30,8 @@ while True:
     # Display the output image with bounding boxes
     cv2.imshow("Object Detection", output_image)
 
-    # Add newly detected objects to the set
-    for obj in objects:
-        detected_objects.add(obj)
+    # Update the set with the current frame's objects
+    current_objects = set(objects)
 
     # Exit the loop when the spacebar is pressed
     if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -44,7 +43,7 @@ cv2.destroyAllWindows()
 
 # Construct a sentence describing the detected objects
 new_sentence = []
-for i, obj in enumerate(detected_objects):
+for i, obj in enumerate(current_objects):
     if i == 0:
         new_sentence.append(f"I saw a {obj}")
     else:

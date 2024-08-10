@@ -1,51 +1,60 @@
 import cv2
 import numpy as np
 import winsound
+import time
 
-# Load the video stream (replace 'video.mp4' with your video file or '0' for webcam)
+# Initialize video capture from webcam
 cap = cv2.VideoCapture(0)
+
+# Track the time of the last beep to prevent frequent beeping
+last_beep_time = time.time()
 
 while True:
     ret, frame = cap.read()
     if not ret:
         break
 
-    # Convert the frame to HSV color space
+    # Convert the current frame from BGR to HSV color space
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-    # Define the range of fire colors in HSV
+    # Define HSV color range for detecting fire
     lower_fire = np.array([0, 100, 100])
-    upper_fire = np.array([20, 200, 200])
+    upper_fire = np.array([20, 255, 255])  # Adjusted for broader color range
 
-    # Threshold the HSV image to get only fire colors
+    # Create a binary mask where fire colors are within the defined range
     mask = cv2.inRange(hsv, lower_fire, upper_fire)
 
-    # Apply morphological operations to remove noise
+    # Apply erosion and dilation to remove small noise
     kernel = np.ones((5, 5), np.uint8)
     mask = cv2.erode(mask, kernel, iterations=1)
     mask = cv2.dilate(mask, kernel, iterations=1)
 
-    # Find contours of fire regions
+    # Find contours of detected fire regions in the mask
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # Iterate through contours and draw rectangles around fire regions
+    fire_detected = False
+    # Draw bounding rectangles around large contours (potential fire regions)
     for cnt in contours:
         area = cv2.contourArea(cnt)
-        if area > 500:  # adjust this value to filter out small regions
+        if area > 500:  # Filter out small contours
             x, y, w, h = cv2.boundingRect(cnt)
             cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+            fire_detected = True
 
-            # Play a beep sound when fire is detected
-            winsound.Beep(344, 1000)  # 2500 Hz frequency, 1 second duration
+    # Beep to alert when fire is detected
+    if fire_detected:
+        current_time = time.time()
+        if current_time - last_beep_time > 5:  # Beep once every 5 seconds
+            winsound.Beep(1000, 500)  # 1000 Hz, 0.5 seconds
+            last_beep_time = current_time
 
-    # Display the output
+    # Display the processed frame
     cv2.imshow('Fire Detection', frame)
 
-    # Exit on key press
+    # Exit the loop when 'q' key is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-# Release resources
+# Release the video capture object and close all windows
 cap.release()
 cv2.destroyAllWindows()
-
